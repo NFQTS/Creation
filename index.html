@@ -9,52 +9,53 @@
   * { margin:0; padding:0; box-sizing:border-box; }
   html, body { height:100%; width:100%; overflow:hidden; font-family:'Orbitron', sans-serif; background:#0a0a0a; color:#fff; }
 
-  /* Background animated nodes */
+  /* Background canvas */
   #background {
     position:fixed; top:0; left:0; width:100%; height:100%; z-index:-1;
-    background: radial-gradient(circle at center, #0a0a0a 0%, #000 100%);
-    overflow:hidden;
+    background:#0a0a0a;
   }
-  .node {
-    position:absolute; width:6px; height:6px; background:#00fff5; border-radius:50%; opacity:0.7;
-    animation: float 10s linear infinite;
-  }
-  @keyframes float {
-    0% { transform: translate(0,0) scale(1);}
-    50% { transform: translate(calc(var(--x) * 50px), calc(var(--y) * 50px)) scale(1.5);}
-    100% { transform: translate(0,0) scale(1);}
-  }
+  canvas { display:block; }
 
   /* Hero content */
   .hero {
-    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; width:90%; max-width:600px;
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; width:90%; max-width:700px;
   }
   .hero h1 {
     font-size:3rem; color:#00fff5; letter-spacing:2px; margin-bottom:1rem; line-height:1.2;
+    opacity:0; transform:translateY(-30px); animation:fadeUp 1.5s forwards;
   }
+  .hero h1:nth-child(1) { animation-delay:0.3s; }
+  .hero h1:nth-child(2) { animation-delay:0.7s; }
+
   .hero p {
-    font-size:1.5rem; color:#aaa; margin-bottom:3rem; opacity:0;
-    transition: opacity 1s ease 1s;
+    font-size:1.5rem; color:#aaa; margin-bottom:3rem; opacity:0; transform:translateY(20px);
+    animation:fadeUp 1.5s forwards; animation-delay:1.2s;
+  }
+
+  @keyframes fadeUp {
+    to { opacity:1; transform:translateY(0); }
   }
 
   /* Button */
   .hero button {
-    padding:1.2rem 3rem; font-size:1.3rem; border:none; border-radius:12px;
+    padding:1.3rem 3rem; font-size:1.3rem; border:none; border-radius:12px;
     background: linear-gradient(90deg,#00fff5,#00c3ff); color:#000; cursor:pointer; letter-spacing:1px;
-    transition: transform 0.2s ease, box-shadow 0.3s ease;
-    position:relative; overflow:hidden;
+    position:relative; overflow:hidden; transition: transform 0.2s ease, box-shadow 0.3s ease;
   }
-  .hero button:hover { transform: scale(1.05); box-shadow: 0 0 25px #00fff5; }
+  .hero button:hover { transform: scale(1.05); box-shadow: 0 0 35px #00fff5; }
 
-  /* Reveal effect behind button */
-  .reveal-text { position:absolute; top:0; left:0; width:100%; height:100%; display:flex; justify-content:center; align-items:center;
-    color:#00fff5; font-weight:700; font-size:1.2rem; letter-spacing:1px; transform:translateY(100%); transition: transform 0.5s ease; }
+  .reveal-text {
+    position:absolute; top:0; left:0; width:100%; height:100%;
+    display:flex; justify-content:center; align-items:center;
+    color:#00fff5; font-weight:700; font-size:1.2rem; letter-spacing:1px;
+    transform:translateY(120%); transition: transform 0.6s ease;
+  }
   .hero button.clicked .reveal-text { transform:translateY(0); }
 
-  /* Loading pulse effect */
+  /* Pulse effect */
   .pulse {
-    position:absolute; width:120%; height:120%; top:-10%; left:-10%; border-radius:50%;
-    background:rgba(0,255,245,0.1); animation:pulse 1s ease infinite;
+    position:absolute; width:140%; height:140%; top:-20%; left:-20%; border-radius:50%;
+    background:rgba(0,255,245,0.08); animation:pulse 1s ease infinite;
     pointer-events:none;
   }
   @keyframes pulse { 0%{transform:scale(0.8);}50%{transform:scale(1.2);}100%{transform:scale(0.8);} }
@@ -65,7 +66,7 @@
     text-align:center; color:#555; font-size:0.9rem;
   }
 
-  /* Responsive text */
+  /* Responsive */
   @media(max-width:768px){ .hero h1{font-size:2.2rem;} .hero p{font-size:1.2rem;} .hero button{font-size:1.1rem; padding:1rem 2rem;} }
   @media(max-width:480px){ .hero h1{font-size:1.8rem;} .hero p{font-size:1rem;} .hero button{font-size:1rem; padding:0.8rem 1.8rem;} }
 
@@ -76,7 +77,8 @@
 <div id="background"></div>
 
 <div class="hero">
-  <h1>Infofi didn’t die...<br>It has just begun...</h1>
+  <h1>InfoFi didn’t die...</h1>
+  <h1>It has just begun...</h1>
   <p id="coming-text">Something is coming...</p>
   <button id="mintBtn">
     Reserve Your Spot
@@ -90,21 +92,65 @@
 </div>
 
 <script>
-  // Background nodes
-  const bg = document.getElementById('background');
-  for(let i=0;i<80;i++){
-    const node = document.createElement('div');
-    node.classList.add('node');
-    node.style.top = Math.random()*100 + 'vh';
-    node.style.left = Math.random()*100 + 'vw';
-    node.style.setProperty('--x', (Math.random()-0.5)*2);
-    node.style.setProperty('--y', (Math.random()-0.5)*2);
-    node.style.animationDuration = (5 + Math.random()*10)+'s';
-    node.style.opacity = 0.3 + Math.random()*0.7;
-    bg.appendChild(node);
+  // Canvas background with animated nodes + connecting lines
+  const canvas = document.createElement('canvas');
+  document.getElementById('background').appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+  let w = canvas.width = window.innerWidth;
+  let h = canvas.height = window.innerHeight;
+  const nodes = [];
+  const nodeCount = 70;
+
+  for(let i=0;i<nodeCount;i++){
+    nodes.push({
+      x: Math.random()*w,
+      y: Math.random()*h,
+      vx: (Math.random()-0.5)*0.4,
+      vy: (Math.random()-0.5)*0.4,
+      radius:2 + Math.random()*3
+    });
   }
 
-  // Reveal text after page load
+  function draw(){
+    ctx.clearRect(0,0,w,h);
+    // draw nodes
+    ctx.fillStyle='#00fff5';
+    nodes.forEach(n=>{
+      ctx.beginPath();
+      ctx.arc(n.x,n.y,n.radius,0,Math.PI*2);
+      ctx.fill();
+    });
+    // draw lines
+    ctx.strokeStyle='rgba(0,255,245,0.1)';
+    for(let i=0;i<nodes.length;i++){
+      for(let j=i+1;j<nodes.length;j++){
+        const dx = nodes[i].x - nodes[j].x;
+        const dy = nodes[i].y - nodes[j].y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if(dist<120){
+          ctx.beginPath();
+          ctx.moveTo(nodes[i].x,nodes[i].y);
+          ctx.lineTo(nodes[j].x,nodes[j].y);
+          ctx.stroke();
+        }
+      }
+    }
+    // update positions
+    nodes.forEach(n=>{
+      n.x+=n.vx; n.y+=n.vy;
+      if(n.x<0||n.x>w) n.vx*=-1;
+      if(n.y<0||n.y>h) n.vy*=-1;
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+
+  window.addEventListener('resize', ()=>{
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+  });
+
+  // Fade in text
   window.addEventListener('load', ()=>{
     document.getElementById('coming-text').style.opacity = 1;
   });
@@ -113,6 +159,17 @@
   const btn = document.getElementById('mintBtn');
   btn.addEventListener('click', ()=>{
     btn.classList.add('clicked');
+    // subtle loading pulse + alert placeholder
+    const pulse = document.createElement('div');
+    pulse.style.position='absolute';
+    pulse.style.width='100%';
+    pulse.style.height='100%';
+    pulse.style.top='0';
+    pulse.style.left='0';
+    pulse.style.background='rgba(0,255,245,0.2)';
+    pulse.style.borderRadius='12px';
+    pulse.style.animation='pulse 0.8s ease forwards';
+    btn.appendChild(pulse);
     setTimeout(()=>{ alert('Reserved! Details coming via email/wallet.'); }, 800);
   });
 </script>
