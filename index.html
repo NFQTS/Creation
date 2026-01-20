@@ -15,7 +15,7 @@
     background: #000;
     font-family: 'Orbitron', sans-serif;
     color: #e0fffe;
-    overflow: hidden;
+    overflow-x: hidden;
     background-image: 
       radial-gradient(circle at 15% 50%, rgba(0,255,245,0.06) 0%, transparent 25%),
       radial-gradient(circle at 85% 30%, rgba(255,0,230,0.04) 0%, transparent 30%);
@@ -54,6 +54,7 @@
     align-items: center;
     text-align: center;
     padding: 2rem;
+    transition: all 0.5s ease;
   }
 
   .glitch {
@@ -103,7 +104,7 @@
     color: #a0ffe0;
     margin: 1.5rem 0 3.5rem;
     white-space: pre;
-    min-height: 1.5em; /* prevent layout jump */
+    min-height: 1.5em;
   }
 
   .cta-container {
@@ -138,6 +139,55 @@
     50% { transform: scale(1.08); box-shadow: 0 0 25px #00fff5ff; }
   }
 
+  /* ─── Stats Section ─── */
+  .stats-section {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 2rem;
+    width: 90%;
+    opacity: 0;
+    transition: all 0.6s ease;
+  }
+
+  .stats-section.show {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+
+  .stat-card {
+    background: rgba(0,255,245,0.05);
+    border: 2px solid #00fff5;
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+    color: #00fff5;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 1rem;
+    box-shadow: 0 0 15px #00fff5aa;
+    transform: translateY(50px);
+    opacity: 0;
+    transition: all 0.6s ease;
+  }
+
+  .stat-card.show {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  .stat-card h2 {
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .stat-card p {
+    font-size: 1.1rem;
+    color: #a0ffe0;
+  }
+
   .footer {
     position: absolute;
     bottom: 1.8rem;
@@ -153,6 +203,7 @@
     .glitch { font-size: clamp(2.4rem, 9vw, 4.2rem); }
     .subtitle { font-size: 1.35rem; }
     .cta-button { font-size: 1.2rem; padding: 0.7rem 1.8rem; }
+    .stats-section { gap: 1rem; }
   }
 </style>
 </head>
@@ -161,7 +212,7 @@
 <canvas id="bg-canvas"></canvas>
 <div class="overlay-grid"></div>
 
-<div class="hero">
+<div class="hero" id="hero">
   <h1 class="glitch" aria-label="InfoFi didn’t die...">
     <span>InfoFi didn’t die...</span>
     InfoFi didn’t die...
@@ -177,9 +228,30 @@
   <p class="subtitle" id="animatedSubtitle">Something is coming</p>
 
   <div class="cta-container">
-    <button class="cta-button" onclick="window.location.href='https://your-auction-page.com';">
-      Launch
-    </button>
+    <button class="cta-button" id="launchBtn">Launch</button>
+  </div>
+</div>
+
+<div class="stats-section" id="statsSection">
+  <div class="stat-card">
+    <h2 id="vehiclesReady">0</h2>
+    <p>Vehicles Ready to Sell</p>
+  </div>
+  <div class="stat-card">
+    <h2 id="vehiclesSold">0</h2>
+    <p>Vehicles Sold</p>
+  </div>
+  <div class="stat-card">
+    <h2 id="creatorPayouts">0</h2>
+    <p>Creator Payouts</p>
+  </div>
+  <div class="stat-card">
+    <h2 id="avgVideo">0</h2>
+    <p>Avg Payout per Hour Video</p>
+  </div>
+  <div class="stat-card">
+    <h2 id="avgImage">0</h2>
+    <p>Avg Payout per HD Image</p>
   </div>
 </div>
 
@@ -206,13 +278,11 @@ function animateDots() {
     dotCount--;
     if (dotCount < 0) forward = true;
   }
-  setTimeout(animateDots, 500); // adjust speed of dots here
+  setTimeout(animateDots, 500);
 }
 
 animateDots();
-</script>
 
-<script>
 // ────────────────────────
 // Background nodes animation
 // ────────────────────────
@@ -283,7 +353,47 @@ function animate(){
   ctx.globalAlpha = 1;
   requestAnimationFrame(animate);
 }
-animate();
+
+// ────────────────────────
+// Launch button triggers stats reveal
+// ────────────────────────
+document.getElementById('launchBtn').addEventListener('click', () => {
+  const hero = document.getElementById('hero');
+  const statsSection = document.getElementById('statsSection');
+  hero.style.opacity = 0; // fade hero
+  setTimeout(() => {
+    hero.style.display = 'none';
+    statsSection.classList.add('show');
+
+    // Animate cards in sequence
+    const cards = statsSection.querySelectorAll('.stat-card');
+    cards.forEach((card, index) => {
+      setTimeout(() => card.classList.add('show'), index * 200);
+    });
+
+    // Animate numbers counting up
+    animateNumber('vehiclesReady', 12);
+    animateNumber('vehiclesSold', 8);
+    animateNumber('creatorPayouts', 5);
+    animateNumber('avgVideo', 120); // example $ per hour
+    animateNumber('avgImage', 35);  // example $ per HD image
+  }, 600);
+});
+
+// ────────────────────────
+// Number count-up animation
+// ────────────────────────
+function animateNumber(id, target) {
+  const el = document.getElementById(id);
+  let current = 0;
+  const increment = Math.ceil(target / 60);
+  const interval = setInterval(() => {
+    current += increment;
+    if(current >= target) current = target;
+    el.textContent = current;
+    if(current >= target) clearInterval(interval);
+  }, 30);
+}
 </script>
 
 </body>
