@@ -105,17 +105,36 @@
     white-space: pre;
   }
 
-  .qr-container {
+  .cta-container {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 1rem;
   }
 
-  .qr-label {
-    font-family: 'Roboto Mono', monospace;
-    font-size: 1.25rem;
+  .cta-button {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.4rem;
+    padding: 0.8rem 2rem;
     color: #00fff5;
+    background: transparent;
+    border: 2px solid #00fff5;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 15px #00fff5aa;
+    animation: pulse 2s infinite;
+  }
+
+  .cta-button:hover {
+    background: #00fff5;
+    color: #000;
+    box-shadow: 0 0 25px #00fff5ff;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 15px #00fff5aa; }
+    50% { transform: scale(1.08); box-shadow: 0 0 25px #00fff5ff; }
   }
 
   .footer {
@@ -132,6 +151,7 @@
   @media (max-width: 768px) {
     .glitch { font-size: clamp(2.4rem, 9vw, 4.2rem); }
     .subtitle { font-size: 1.35rem; }
+    .cta-button { font-size: 1.2rem; padding: 0.7rem 1.8rem; }
   }
 </style>
 </head>
@@ -155,39 +175,16 @@
 
   <p class="subtitle">Something is coming...</p>
 
-  <div class="qr-container">
-    <div class="qr-label">Scan to pay 100 POL</div>
-    <canvas id="qrCanvas"></canvas>
+  <div class="cta-container">
+    <button class="cta-button" onclick="window.location.href='https://your-auction-page.com';">
+      🚗 Bid on the Sports Car
+    </button>
   </div>
 </div>
 
 <div class="footer">
   Phase 0 • Limited • Decentralized
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
-<script>
-// ────────────────────────
-// QR Code setup
-// ────────────────────────
-const qrCanvas = document.getElementById('qrCanvas');
-const walletAddress = "0x73fe0f0fa44035607b9ddb5ba560301ae7c96a54"; // your wallet
-const amountPOL = "100";
-
-const uri = `ethereum:${walletAddress}@137?value=${parseFloat(amountPOL)*1e18}`; 
-// Polygon mainnet = chainId 137
-
-QRCode.toCanvas(qrCanvas, uri, {
-  width: 200,
-  color: {
-    dark: "#00fff5",
-    light: "#00000000"
-  },
-  margin: 2
-}, function (error) {
-  if (error) console.error(error);
-});
-</script>
 
 <script>
 // ────────────────────────
@@ -262,5 +259,6 @@ function animate(){
 }
 animate();
 </script>
+
 </body>
 </html>
